@@ -1,0 +1,34 @@
+POST http://localhost:3001/api/notes
+Content-Type: application/json
+
+{
+    "content": "This is a new note",
+    "important": false
+}
+
+###
+POST http://localhost:3001/api/notes
+Content-Type: application/json
+
+{
+    "content": "This is another new note",
+    "important": true
+}
+
+###
+POST http://localhost:3001/api/notes
+Content-Type: application/json
+
+{
+    "content": "hola",
+    "important": false
+}
+
+###
+POST http://localhost:3001/api/notes
+Content-Type: application/json
+
+{
+    "content": "This note should not be valid",
+    "userId": "6419d5e9f8c0f2daad4a7316"
+}
