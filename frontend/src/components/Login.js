@@ -1,11 +1,11 @@
 import { useState } from "react"
-import login from '../services/login'
+import loginServices from '../services/login'
 
 const Login = (props) => {
     const [username, setUsername] = useState('')
     const [password, setPassword] = useState('')
 
-    const handleLogin = (event) => {
+    const handleLogin = async (event) => {
         event.preventDefault()
 
         const user = {
@@ -13,13 +13,13 @@ const Login = (props) => {
             password
         }
 
-        login(user)
-            .then((response) => {
-                props.onSuccessfulConnection(response)
-            })
-            .catch((error) => {
-                props.handleError(error.response.data.error)
-            })
+        try {
+            const response = await loginServices.login(user)
+            props.onSuccessfulConnection(response)
+        }
+        catch (exception) {
+            props.handleError('Wrong credentials')
+        }
     }
 
     const handleUsernameChange = (event) => {
@@ -29,7 +29,8 @@ const Login = (props) => {
         setPassword(event.target.value)
     }
 
-    if (props.username === '') {
+
+    if (!props.username) {
         return (
             <div>
                 <form onSubmit={handleLogin}>
@@ -43,7 +44,8 @@ const Login = (props) => {
     else {
         return (
             <div>
-                Logged in as {props.username}
+                Logged in as {props.username} &emsp;
+                <button onClick={props.onDisconnect}>Log out</button>
             </div>
         )
     }

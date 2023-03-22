@@ -1,14 +1,4 @@
-const Importance = ({ important, handleChange }) => {
-    return (
-        <>
-            &emsp;
-            &emsp;
-            &emsp;
-            Important:
-            <input type="checkbox" name="isNoteImportant" id="isNoteImportant" onChange={handleChange} defaultChecked={important}/>
-        </>
-    )
-}
+import { useState } from "react"
 
 const Note = ({ note , handleImportanceChange }) => {
 
@@ -21,9 +11,40 @@ const Note = ({ note , handleImportanceChange }) => {
     return (
         <li className="note">
             {note.content}
-            <Importance important={note.important} handleChange={handleChange} />
+            &emsp;
+            &emsp;
+            &emsp;
+            Important:
+            <input type="checkbox" name="isNoteImportant" id="isNoteImportant" onChange={handleChange} defaultChecked={note.important}/>
         </li>
     )
 }
 
-export default Note
+const CreateNote = (props) => {
+    const [newNote, setNewNote] = useState('New note...')
+
+    const handleNewNote = async (event) => {
+        event.preventDefault()
+
+        const note = {
+            content: newNote,
+            important: Math.random() < 0.5
+        }
+
+        const result = await props.addNote(note)
+
+        if (!result) {
+            setNewNote('')
+        }
+    }
+
+    return (
+        <form onSubmit={handleNewNote}>
+            <input value={newNote} onChange={(event) => { setNewNote(event.target.value) } } />
+            <button type="submit">Save</button>
+        </form>
+    )
+}
+
+// eslint-disable-next-line import/no-anonymous-default-export
+export default { Note, CreateNote }

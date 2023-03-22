@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import Login from './components/Login'
-import Note from './components/Note'
+import noteComponents from './components/Note'
 import noteService from './services/notes'
 
 const Notification = ({ message }) => {
@@ -31,12 +31,9 @@ const Footer = () => {
 
 const App = (props) => {
     const [notes, setNotes] = useState([])
-    const [newNote, setNewNote] = useState('New note...')
     const [showAll, setShowAll] = useState(true)
     const [errorMessage, setErrorMessage] = useState(null)
-    const [username, setUsername] = useState('')
-    const [name, setName] = useState('')
-    const [token, setToken] = useState(null)
+    const [user, setUser] = useState(null)
     
     useEffect(() => {
         noteService
@@ -46,29 +43,38 @@ const App = (props) => {
             })
     }, [])
 
-    const handleLogin = (data) => {
-        setToken(data.token)
-        setUsername(data.username)
-        setName(data.name)
+    useEffect(() => {
+        const loggedUserJSON = window.localStorage.getItem('loggedNoteappUser')
+
+        if (loggedUserJSON) {
+            const user = JSON.parse(loggedUserJSON)
+            setUser(user)
+            noteService.setToken(user.token)
+        }
+    }, [])
+
+    const setLoginData = (data) => {
+        window.localStorage.setItem('loggedNoteappUser', JSON.stringify(data))
+        setUser(data)
+        noteService.setToken(data.token)
     }
 
-    const addNote = (event) => {
-        event.preventDefault()
-        
-        const note = {
-            content: newNote,
-            important: Math.random() < 0.5
-        }
+    const removeLoginData = () => {
+        console.log('Logging out')
+        window.localStorage.removeItem('loggedNoteappUser')
+        setUser(null)
+        noteService.setToken('')
+    }
 
-        noteService
-            .create(note, token)
-            .then(newNote => {
-                setNotes(notes.concat(newNote))
-                setNewNote('')
-            })
-            .catch(error => {
-                notifyError('Need to log in before creating a note')
-            })
+    const addNote = async (newNote) => {
+        try {
+            const result = await noteService.create(newNote)
+            setNotes(notes.concat(newNote))
+        }
+        catch (exception) {
+            notifyError('Need to log in before creating a note')
+            return exception
+        }
     }
 
     const notifyError = (message) => {
@@ -90,10 +96,6 @@ const App = (props) => {
             })
     }
 
-    const handleNewNoteChange = (event) => {
-        setNewNote(event.target.value)
-    }
-
     const handleVisibilityChange = (event) => {
         console.log('Clicked on visibility change: ',event.target.checked)
         setShowAll(!event.target.checked)
@@ -104,19 +106,16 @@ const App = (props) => {
     return (
         <div>
             <h1>Notes</h1>
-            <Login username={name} onSuccessfulConnection={handleLogin} handleError={notifyError} />
+            <Login username={(user) ? user.name : null} onSuccessfulConnection={setLoginData} onDisconnect={removeLoginData} handleError={notifyError} />
             <br />
             <Notification message={errorMessage} />
+            {(user) ? (<><noteComponents.CreateNote addNote={addNote} /> <br /></>) : null}
             Only show important notes<input type="checkbox" name="showImportantOnly" id="showImportantOnly" onChange={handleVisibilityChange} />
             <ul>
                 {notesToShow.map(note =>
-                    <Note key={note.id} note={note} handleImportanceChange={handleImportaceChange} />
+                    <noteComponents.Note key={note.id} note={note} handleImportanceChange={handleImportaceChange} />
                 )}
             </ul>
-            <form onSubmit={addNote}>
-                <input value={newNote} onChange={handleNewNoteChange} />
-                <button type="submit">Save</button>
-            </form>
             <Footer />
         </div>
     )
